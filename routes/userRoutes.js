@@ -9,6 +9,12 @@ router.route('/')
     .get(userController.getAllUsers)
     .post(createValidator, userController.createUser);
 
+router.route('/profile')
+    .get(verifyJWT, userController.retrieveProfile)
+
+router.route('/profile/:username')
+    .get(verifyJWT, userController.getUserByUsername)
+
 router.route('/:id')
     .get(userController.getUserById)
     .put(updateValidator, userController.updateUserInfo)

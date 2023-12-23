@@ -2,6 +2,7 @@ const { validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const { logEvent } = require('../helpers/logEvent');
+const { default: mongoose } = require('mongoose');
 
 const getAllUsers = async (req, res) => {
     try {
@@ -77,16 +78,71 @@ const removeUser = async (req, res) => {
     const { id } = req.params;
     if (id.length !== 24) return res.sendStatus(404);
 
-    try{
-        const userToRemove = await User.findOneAndDelete({_id:id});
-        if(userToRemove){
+    try {
+        const userToRemove = await User.findOneAndDelete({ _id: id });
+        if (userToRemove) {
             await logEvent(req, `User ${userToRemove.username} deleted by ${req.user}`);
             return res.status(200).json({ message: `User removed succesfully` });
-        }else{
+        } else {
             return res.status(404).json({ message: `User not found` });
         }
-    }catch(err){
+    } catch (err) {
         console.error(err);
+    }
+}
+
+// THIS IS ONLY TO RETRIEVE OWN USER PROFILE UNDER MY PROFILE SECTION IN THE FRONTEND
+const retrieveProfile = async (req, res) => {
+    const userId = new mongoose.Types.ObjectId(req.user.sub);
+    try {
+        const profileInfo = await User.aggregate([
+            {
+                $match: { "_id": userId }
+            }, {
+                $lookup: { from: 'posts', localField: '_id', foreignField: 'user', as: 'Posts' }
+            }, {
+                $addFields: {
+                    User: { name: "$name", surname: "$surname", username: "$username", image: "$image" }
+                }
+            }, {
+                $project: { "password": 0, "role": 0, "name": 0, "surname": 0, "username": 0, "image": 0 }
+            }
+        ]);
+
+        if (profileInfo) {
+            return res.status(200).json({
+                profile: profileInfo[0]
+            })
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+const getUserByUsername = async (req, res) => {
+    const { username } = req.params;
+    try {
+        const profileInfo = await User.aggregate([
+            {
+                $match: { "username": username }
+            }, {
+                $lookup: { from: 'posts', localField: '_id', foreignField: 'user', as: 'Posts' }
+            }, {
+                $addFields: {
+                    User: { name: "$name", surname: "$surname", username: "$username", image: "$image" }
+                }
+            }, {
+                $project: { "password": 0, "role": 0, "name": 0, "surname": 0, "username": 0, "image": 0 }
+            }
+        ]);
+
+        if (profileInfo) {
+            return res.status(200).json({
+                profile: profileInfo[0]
+            })
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 
@@ -95,5 +151,7 @@ module.exports = {
     getUserById,
     createUser,
     updateUserInfo,
-    removeUser
+    removeUser,
+    retrieveProfile,
+    getUserByUsername
 }
