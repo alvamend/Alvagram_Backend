@@ -136,10 +136,12 @@ const getUserByUsername = async (req, res) => {
             }
         ]);
 
-        if (profileInfo) {
+        if (profileInfo.length > 0) {
             return res.status(200).json({
                 profile: profileInfo[0]
             })
+        }else{
+            return res.sendStatus(404)
         }
     } catch (error) {
         console.error(error);
