@@ -1,3 +1,4 @@
+const { default: mongoose } = require('mongoose');
 const Follow = require('../models/Follows');
 const User = require('../models/User');
 
@@ -24,9 +25,28 @@ const handleFollow = async (req, res) => {
     }catch(error){
         console.error(error);
     }
+}
+
+const handleUnfollow = async(req,res) => {
+
+    const followedUser = req.params.id;
+
+    try{
+        const id = new mongoose.Types.ObjectId(req.user.sub)
+        const followExists = await Follow.findOneAndDelete({userFollowed:followedUser, userFollowing: id})
+        
+        if(!followExists) return res.sendStatus(503);
+
+        return res.status(200).json({
+            message: `Unfollowing user`
+        })
+    }catch(error){
+        console.error(error);
+    }
 
 }
 
 module.exports = {
-    handleFollow
+    handleFollow,
+    handleUnfollow
 }

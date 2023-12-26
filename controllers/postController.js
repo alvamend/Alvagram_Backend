@@ -1,6 +1,7 @@
 const { default: mongoose } = require('mongoose');
 const PostSchema = require('../models/Post');
 const User = require('../controllers/userController');
+const Like = require('../models/Like');
 const Follow = require('../models/Follows');
 const fs = require('fs');
 const path = require('path');
@@ -125,9 +126,10 @@ const getPostsUsersIFollow = async (req, res) => {
                 $lookup: { from: 'users', foreignField: '_id', localField: 'userFollowed', as: 'FollowedUser' }
             }, {
                 $unwind: "$FollowedUser"
-            },
-            {
-                $project: { "FollowedUser.password": 0, "FollowedUser.role": 0, "userFollowed": 0, "date": 0, "userFollowing": 0, "Post.user": 0 }
+            }, {
+                $lookup: { from: 'likes', foreignField: 'PostLiked', localField: 'Post._id', as: 'AllLikes' }
+            }, {
+                $project: { "FollowedUser.password": 0, "FollowedUser.role": 0, "userFollowed": 0, "date": 0, "userFollowing": 0, "Post.user": 0, 'AllLikes._id': 0, 'AllLikes.PostLiked': 0 }
             }
         ])
         if (postsUsersIfollow) {

@@ -21,6 +21,7 @@ app.use('/', require('./routes/authRoutes'));
 app.use('/user', require('./routes/userRoutes'));
 app.use('/post', require('./routes/postRoutes'));
 app.use('/follow', require('./routes/followRoutes'));
+app.use('/like', require('./routes/likeRoutes'));
 
 app.listen(port, () => {
     console.log(`App running in: http://localhost:${port}`);
