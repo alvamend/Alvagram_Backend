@@ -33,6 +33,7 @@ router.route('/image/:filename')
 router.route('/:id')
     .get(checkAuth.verifyJWT, postController.getPostById)
     .delete(checkAuth.verifyJWT, postController.removePost)
+    .put(checkAuth.verifyJWT, postController.updatePost)
 
 
 

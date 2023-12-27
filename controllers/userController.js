@@ -1,8 +1,10 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const fs = require('fs');
 const { logEvent } = require('../helpers/logEvent');
 const { default: mongoose } = require('mongoose');
+const path = require('path');
 
 const getAllUsers = async (req, res) => {
     try {
@@ -134,10 +136,10 @@ const getUserByUsername = async (req, res) => {
             }, {
                 $lookup: { from: 'users', localField: 'Followers.userFollowing', foreignField: '_id', as: 'FollowersInfo' }
             }, {
-                $lookup: {from: 'follows', localField: '_id', foreignField: 'userFollowing', as: 'Following'}
-            },{
-                $lookup: { from: 'users', localField: 'Following.userFollowed', foreignField: '_id', as: 'FollowingInfo'}
-            },{
+                $lookup: { from: 'follows', localField: '_id', foreignField: 'userFollowing', as: 'Following' }
+            }, {
+                $lookup: { from: 'users', localField: 'Following.userFollowed', foreignField: '_id', as: 'FollowingInfo' }
+            }, {
                 $addFields: {
                     User: { name: "$name", surname: "$surname", username: "$username", image: "$image", id: "$_id" }
                 }
@@ -158,6 +160,53 @@ const getUserByUsername = async (req, res) => {
     }
 }
 
+const uploadProfilePic = async (req, res) => {
+    if (req.file) {
+        const file = req.file.originalname;
+        const splitFile = file.split('\.');
+        const extension = splitFile[1];
+
+        if (extension != "png" && extension != "jpg" &&
+            extension != "jpeg" && extension != "gif" && extension != 'JPG') {
+            fs.unlink(req.file.path, error => {
+                return res.status(403).json({ message: 'Invalid file extension' })
+            });
+        } else {
+            try {
+                const userToUpdate = await User.findOneAndUpdate({ _id: req.user.sub }, {
+                    image: req.file.filename
+                })
+
+                if (!userToUpdate) {
+                    return res.status(503).json({ message: `Could not modify profile picture` })
+                } else {
+                    return res.status(200).json({
+                        message: `Image uploaded successfully`,
+                    })
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+}
+
+const sendImage = async (req, res) => {
+    const { filename } = req.params;
+    const localRoute = './profile_pics/' + filename;
+
+    fs.stat(localRoute, (error, exists) => {
+        if (exists) {
+            return res.sendFile(path.resolve(localRoute));
+        } else {
+            return res.status(404).json({
+                localRoute,
+                filename,
+            })
+        }
+    })
+}
+
 module.exports = {
     getAllUsers,
     getUserById,
@@ -165,5 +214,7 @@ module.exports = {
     updateUserInfo,
     removeUser,
     retrieveProfile,
-    getUserByUsername
+    getUserByUsername,
+    uploadProfilePic,
+    sendImage
 }

@@ -31,43 +31,38 @@ const getPostById = async (req, res) => {
 
 const createPost = async (req, res) => {
 
-    const file = req.file.originalname;
-    const splitFile = file.split('\.');
-    const extension = splitFile[1];
+    if (req.file) {
+        const file = req.file.originalname;
+        const splitFile = file.split('\.');
+        const extension = splitFile[1];
 
-    const description = req.body.description;
+        if (extension != "png" && extension != "jpg" &&
+            extension != "jpeg" && extension != "gif") {
+            fs.unlink(req.file.path, error => {
+                return res.status(403).json({ message: 'Invalid file extension' })
+            });
+        } else {
+            try {
+                const postToCreate = await PostSchema.create({
+                    user: req.user.sub,
+                    image: req.file.filename
+                })
 
-    if (!description || description == '' || description === undefined) {
-        fs.unlink(req.file.path, error => {
-            console.log(`Could not save file`)
-        });
+                if (!postToCreate) {
+                    return res.status(503).json({ message: `Could not create Post` })
+                } else {
+                    return res.status(200).json({
+                        message: `Post created successfully`,
+                        postId: postToCreate._id,
+                        filename: postToCreate.image
+                    })
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
     }
-
-    if (extension != "png" && extension != "jpg" &&
-        extension != "jpeg" && extension != "gif") {
-        fs.unlink(req.file.path, error => {
-            return res.status(403).json({ message: 'Invalid file extension' })
-        });
-    }
-
-    try {
-
-        if (!description || description == '' || description === undefined) return res.status(403).json({ message: 'Invalid description' })
-
-        const postToCreate = await PostSchema.create({
-            user: req.user.sub,
-            description: description,
-            image: req.file.filename
-        })
-
-        if (!postToCreate) return res.status(503).json({ message: `Could not create Post` })
-
-        return res.status(200).json({ message: `Post created successfully` })
-
-    } catch (err) {
-        console.error(err);
-    }
-
 }
 
 const sendImage = async (req, res) => {
@@ -97,8 +92,11 @@ const removePost = async (req, res) => {
                 message: `Could not delete Post`
             })
         } else {
-            res.status(200).json({
-                message: `Post deleted successfully`
+            console.log(postFound.image);
+            fs.unlink(`./uploads/${postFound.image}`, error => {
+                res.status(200).json({
+                    message: `Post deleted successfully`
+                })
             })
         }
 
@@ -144,11 +142,32 @@ const getPostsUsersIFollow = async (req, res) => {
 
 }
 
+const updatePost = async (req, res) => {
+    const { id } = req.params;
+    const { description } = req.body;
+    if (id.length !== 24) return res.sendStatus(404);
+    try {
+
+        const postToUpdate = await PostSchema.findOneAndUpdate({ _id: id }, {
+            description: description
+        })
+        if (!postToUpdate) {
+            return res.sendStatus(503);
+        } else {
+            return res.status(200).json({ message: `Post created/updated successfully` })
+        }
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 module.exports = {
     getAllPosts,
     getPostById,
     createPost,
     sendImage,
     removePost,
-    getPostsUsersIFollow
+    getPostsUsersIFollow,
+    updatePost
 }
