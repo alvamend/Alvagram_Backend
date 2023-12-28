@@ -127,6 +127,8 @@ const getPostsUsersIFollow = async (req, res) => {
             }, {
                 $lookup: { from: 'likes', foreignField: 'PostLiked', localField: 'Post._id', as: 'AllLikes' }
             }, {
+                $lookup: { from: 'comments', foreignField: 'postId', localField: 'Post._id', as: 'Comments' }
+            }, {
                 $project: { "FollowedUser.password": 0, "FollowedUser.role": 0, "userFollowed": 0, "date": 0, "userFollowing": 0, "Post.user": 0, 'AllLikes._id': 0, 'AllLikes.PostLiked': 0 }
             }
         ])

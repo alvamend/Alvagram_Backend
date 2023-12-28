@@ -180,9 +180,19 @@ const uploadProfilePic = async (req, res) => {
                 if (!userToUpdate) {
                     return res.status(503).json({ message: `Could not modify profile picture` })
                 } else {
-                    return res.status(200).json({
-                        message: `Image uploaded successfully`,
-                    })
+                    if (userToUpdate.image !== 'default.png') {
+                        fs.unlink(`./profile_pics/${userToUpdate.image}`, error => {
+                            return res.status(200).json({
+                                message: `Image uploaded successfully`,
+                                image: req.file.filename
+                            })
+                        });
+                    } else {
+                        return res.status(200).json({
+                            message: `Image uploaded successfully`,
+                            image: req.file.filename
+                        })
+                    }
                 }
             } catch (err) {
                 console.error(err);
@@ -207,6 +217,28 @@ const sendImage = async (req, res) => {
     })
 }
 
+const changePassword = async (req, res) => {
+    const { id } = req.params;
+    const { oldPassword, newPassword } = req.body;
+    try{
+        const userExists = await User.findOne({_id:id});
+        
+        if(!userExists) return res.sendStatus(403);
+
+        const oldPasswordMatches = bcrypt.compareSync(oldPassword, userExists.password);
+        
+        if(!oldPasswordMatches){
+            return res.status(404).json({message: 'Old password is incorrect'})
+        }else{
+            const pwdToSave = bcrypt.hashSync(newPassword, 10);
+            await userExists.updateOne({password:pwdToSave});
+            return res.status(200).json({message:`Password changed successfully`})
+        }
+    }catch(error){
+        console.error(error);
+    }
+}
+
 module.exports = {
     getAllUsers,
     getUserById,
@@ -216,5 +248,6 @@ module.exports = {
     retrieveProfile,
     getUserByUsername,
     uploadProfilePic,
-    sendImage
+    sendImage,
+    changePassword
 }

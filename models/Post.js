@@ -13,18 +13,6 @@ const PostSchema = new Schema({
         type: String,
         default: ''
     },
-    comments: [{
-        userComment: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
-        },
-        comment: {
-            type: String
-        },
-        dateComment: {
-            type: String
-        }
-    }],
     likes: {
         type: Number,
         default: 0

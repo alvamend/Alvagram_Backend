@@ -25,6 +25,9 @@ router.route('/')
     .get(userController.getAllUsers)
     .post(createValidator, userController.createUser);
 
+router.route('/changepwd/:id')
+    .post(verifyJWT, userController.changePassword)
+
 router.route('/profile')
     .get(verifyJWT, userController.retrieveProfile)
 
