@@ -15,14 +15,33 @@ const getAllPosts = async (req, res) => {
 
 const getPostById = async (req, res) => {
     try {
-        const { id } = req.params;
+        let { id } = req.params;
         if (id.length !== 24) return res.sendStatus(404);
 
-        const postFound = await PostSchema.findOne({ _id: id });
+        id = new mongoose.Types.ObjectId(id);
+        const postFound = await PostSchema.aggregate([
+            {
+                $match: { '_id': id }
+            }, {
+                $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'UserWhoPosted' }
+            }, {
+                $unwind: '$UserWhoPosted'
+            }, {
+                $lookup: { from: 'comments', localField: '_id', foreignField: 'postId', as: 'Comments' }
+            }, {
+                $lookup: { from: 'likes', localField: '_id', foreignField: 'PostLiked', as: 'AllLikes' }
+            }, {
+                $addFields: {
+                    Post: {date: '$date', image: '$image', description: '$description', likes: '$likes'}
+                }
+            },{
+                $project: { "UserWhoPosted.password": 0, "UserWhoPosted.role": 0, 'AllLikes._id': 0, 'AllLikes.PostLiked': 0, 'user':0 }
+            }
+        ])
         if (!postFound) {
             return res.status(404).json({ message: `Post not found` });
         } else {
-            return res.status(200).json({ post: postFound })
+            return res.status(200).json({ post: postFound[0] })
         }
     } catch (err) {
         console.error(err)
@@ -121,15 +140,15 @@ const getPostsUsersIFollow = async (req, res) => {
             }, {
                 $sort: { 'Post.date': -1 }
             }, {
-                $lookup: { from: 'users', foreignField: '_id', localField: 'userFollowed', as: 'FollowedUser' }
+                $lookup: { from: 'users', foreignField: '_id', localField: 'userFollowed', as: 'UserWhoPosted' }
             }, {
-                $unwind: "$FollowedUser"
+                $unwind: "$UserWhoPosted"
             }, {
                 $lookup: { from: 'likes', foreignField: 'PostLiked', localField: 'Post._id', as: 'AllLikes' }
             }, {
                 $lookup: { from: 'comments', foreignField: 'postId', localField: 'Post._id', as: 'Comments' }
             }, {
-                $project: { "FollowedUser.password": 0, "FollowedUser.role": 0, "userFollowed": 0, "date": 0, "userFollowing": 0, "Post.user": 0, 'AllLikes._id': 0, 'AllLikes.PostLiked': 0 }
+                $project: { "UserWhoPosted.password": 0, "UserWhoPosted.role": 0, "userFollowed": 0, "date": 0, "userFollowing": 0, "Post.user": 0, 'AllLikes._id': 0, 'AllLikes.PostLiked': 0 }
             }
         ])
         if (postsUsersIfollow) {

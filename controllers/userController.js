@@ -130,8 +130,6 @@ const getUserByUsername = async (req, res) => {
             }, {
                 $lookup: { from: 'posts', localField: '_id', foreignField: 'user', as: 'Posts' }
             }, {
-                $sort: { "Posts.date": -1 }
-            }, {
                 $lookup: { from: 'follows', localField: '_id', foreignField: 'userFollowed', as: 'Followers' }
             }, {
                 $lookup: { from: 'users', localField: 'Followers.userFollowing', foreignField: '_id', as: 'FollowersInfo' }
@@ -144,7 +142,7 @@ const getUserByUsername = async (req, res) => {
                     User: { name: "$name", surname: "$surname", username: "$username", image: "$image", id: "$_id" }
                 }
             }, {
-                $project: { "password": 0, "role": 0, "name": 0, "surname": 0, "username": 0, "image": 0, "Followers": 0, "FollowersInfo._id": 0, "FollowersInfo.image": 0, "FollowersInfo.password": 0, "FollowersInfo.role": 0, "Following": 0, "FollowingInfo._id": 0, "FollowingInfo.image": 0, "FollowingInfo.password": 0, "FollowingInfo.role": 0 }
+                $project: { "password": 0, "role": 0, "name": 0, "surname": 0, "username": 0, "image": 0, "Followers": 0, "FollowersInfo._id": 0, "FollowersInfo.password": 0, "FollowersInfo.role": 0, "Following": 0, "FollowingInfo._id": 0, "FollowingInfo.password": 0, "FollowingInfo.role": 0 }
             }
         ]);
 
