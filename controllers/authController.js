@@ -50,7 +50,7 @@ const handleLogin = async (req, res) => {
 const handleRefreshToken = (req, res) => {
     try {
         const cookies = req.cookies;
-        if (!cookies?.jwt) return res.sendStatus(403);
+        if (!cookies?.jwt) return res.sendStatus(401);
 
         const refreshToken = cookies.jwt;
 
@@ -58,7 +58,7 @@ const handleRefreshToken = (req, res) => {
             refreshToken,
             process.env.REFRESH_TOKEN_SECRET,
             async (error, decode) => {
-                if (error) return res.sendStatus(401);
+                if (error) return res.sendStatus(403);
 
                 const foundUser = await User.findOne({ username: decode.username });
                 const payload = {
@@ -72,7 +72,7 @@ const handleRefreshToken = (req, res) => {
                 const newAccessToken = jwt.sign(
                     payload,
                     process.env.ACCESS_TOKEN_SECRET,
-                    { expiresIn: '10s' }
+                    { expiresIn: '30m' }
                 )
 
                 return res.status(200).json({
@@ -89,7 +89,11 @@ const handleRefreshToken = (req, res) => {
 }
 
 const handleLogout = (req, res) => {
+    const cookies = req.cookies;
+    if(!cookies.jwt) return res.sendStatus(204);
 
+    res.clearCookie('jwt', {httpOnly: true, sameSite: 'None', secure: true});
+    res.sendStatus(204);
 }
 
 module.exports = {
