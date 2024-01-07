@@ -24,9 +24,8 @@ const handleSocketFunctions = (server) => {
     io.on('connection', async (socket) => {
 
         const userController = require('../controllers/chatController');
+        const chatController = require('../controllers/chatController');
         let users = [];
-
-        console.log('USER CONNECTED')
 
         for (let [id, socket] of io.of("/").sockets) {
             users.push({
@@ -56,7 +55,7 @@ const handleSocketFunctions = (server) => {
         
         //CREATES NEW CHAT, VERIFIES IF CHAT ALREADY EXISTS AND EMITS THE EVENT TO THE 2ND USER
         socket.on('New Chat', async data => {
-            const chatController = require('../controllers/chatController');
+            
             const chatCreated = await chatController.createChat(data);
         
             if(chatCreated !== false){
@@ -70,13 +69,17 @@ const handleSocketFunctions = (server) => {
         })
 
         //SUBSCRIBES THE CURRENT SOCKET TO THE ROOM
-        socket.on('Join Chat', data => {
+        socket.on('Join Chat', async data => {
             socket.join(data.chatId);
+            const chatContent = await chatController.retrieveChatHistory(data.chatId);
+            
+            if(chatContent !== false){
+                socket.emit('Retrieve Chat', chatContent);
+            }
         })
 
         //HANDLES NEW MESSAGES AND SENDS THEM TO THE SPECIFIC ROOM
         socket.on('Send Message', async data => {
-            const chatController = require('../controllers/chatController');
             try {
                 const time = Date.now();
                 const handleMessage = await chatController.handleNewMessage(data, time);
@@ -91,6 +94,17 @@ const handleSocketFunctions = (server) => {
             } catch (error) {
                 console.error(error);
             }          
+        })
+
+        socket.on('disconnect', () => {
+            const rooms = Object.keys(socket.rooms);
+            rooms.forEach(room => {
+                socket.off('Get Chats')
+                socket.off('New Chat')
+                socket.off('Join Chat')
+                socket.off('Send Message')
+                socket.leave(room);
+            })
         })
     })
 }

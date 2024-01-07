@@ -1,4 +1,5 @@
 const PostSchema = require('../models/Post');
+const Notification = require('../models/Notifications');
 const Like = require('../models/Like');
 
 const handleLike = async (req, res) => {
@@ -21,11 +22,16 @@ const handleLike = async (req, res) => {
                 message: 'Disliked'
             })
         } else {
-
             const createLike = await Like.create({
                 userLiked: req.user.sub,
                 usernameLiked: req.user.username,
                 PostLiked: postFound._id
+            });
+
+            const createNotification = await Notification.create({
+                user: req.user.sub,
+                typeNotification: 'Like',
+                postId: postFound._id
             });
 
             if(!createLike) return res.sendStatus(503);

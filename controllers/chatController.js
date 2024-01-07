@@ -51,8 +51,20 @@ const handleNewMessage = async(data, time) => {
     }
 }
 
+const retrieveChatHistory = async(chatId) => {
+    try{
+        const chatExists = await Chat.findOne({_id:chatId});
+        if(!chatExists) return false;
+
+        return chatExists?.messages;
+    }catch(error){
+        console.error(error);
+    }
+}
+
 module.exports = {
     getChats,
     createChat,
-    handleNewMessage
+    handleNewMessage,
+    retrieveChatHistory
 }

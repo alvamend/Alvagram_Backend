@@ -24,6 +24,7 @@ app.use('/post', require('./routes/postRoutes'));
 app.use('/follow', require('./routes/followRoutes'));
 app.use('/like', require('./routes/likeRoutes'));
 app.use('/comment', require('./routes/commentRoutes'));
+app.use('/notification', require('./routes/notificationRoutes'));
 const server = createServer(app);
 
 handleSocketFunctions(server);
