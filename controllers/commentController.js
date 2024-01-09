@@ -1,5 +1,6 @@
 const Comment = require('../models/Comment');
 const Post = require('../models/Post');
+const Notification = require('../models/Notifications');
 
 const getAllComments = async (req, res) => {
 
@@ -11,8 +12,6 @@ const createComment = async (req, res) => {
     const { username } = req.user;
     if (postId.length !== 24) return res.sendStatus(404);
 
-    console.log(postId, comment, username)
-
     try {
         const postExists = await Post.findOne({ _id: postId });
         if (!postExists) return res.sendStatus(404);
@@ -22,6 +21,12 @@ const createComment = async (req, res) => {
             user: username,
             comments: comment
         })
+
+        const createNotification = await Notification.create({
+            user: req.user.sub,
+            typeNotification: 'Comment',
+            postId: postExists._id
+        });
 
         if(!saveComment){
             return res.sendStatus(503);

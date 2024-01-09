@@ -16,6 +16,8 @@ const retrieveNotifications = async (req, res) => {
         },{
             $match: {'Post.user':id}
         },{
+            $sort: {'date':-1}
+        },{
             $project: {'user':0, 'postId':0, 'User.password':0, 'User.role':0}
         }
     ])
