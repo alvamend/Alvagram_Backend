@@ -30,8 +30,8 @@ const handleLogin = async (req, res) => {
             role: foundUser.role
         }
 
-        const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '30m' }); //CHANGE LATER
-        const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '1d' }); //CHANGE LATER
+        const accessToken = jwt.sign(payload, `${process.env.ACCESS_TOKEN_SECRET}`, { expiresIn: '30m' }); //CHANGE LATER
+        const refreshToken = jwt.sign(payload, `${process.env.REFRESH_TOKEN_SECRET}`, { expiresIn: '1d' }); //CHANGE LATER
 
         await logEvent(req, `User ${foundUser.username} logged in`)
         res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });

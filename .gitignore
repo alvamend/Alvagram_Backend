@@ -1,6 +1,5 @@
 .env
-/config
 /node_modules
-/uploads
+/uploads/*
 /logs
-/profile_pics
+/profile_pics/*

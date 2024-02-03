@@ -44,7 +44,7 @@ const createUser = async (req, res) => {
 
         if (userCreated) {
             await logEvent(req, `User ${userCreated.username} created by ${req.user}`)
-            return res.status(200).json({ message: `User created succesfully` });
+            return res.json({status:200, message: `User created succesfully` });
         } else {
             return res.status(404).json({ message: `User not found` });
         }

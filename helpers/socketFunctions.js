@@ -52,15 +52,15 @@ const handleSocketFunctions = (server) => {
             //SENDS ALL THE CHATS WHERE THE USER IS PRESENT
             socket.emit('Fetched Chats', userChats);
         });
-        
+
         //CREATES NEW CHAT, VERIFIES IF CHAT ALREADY EXISTS AND EMITS THE EVENT TO THE 2ND USER
         socket.on('New Chat', async data => {
-            
+
             const chatCreated = await chatController.createChat(data);
-        
-            if(chatCreated !== false){
+
+            if (chatCreated !== false) {
                 io.sockets.sockets.forEach(socketDestination => {
-                    if(socketDestination.username === chatCreated.toUser){
+                    if (socketDestination.username === chatCreated.toUser) {
                         io.to(socketDestination.id).emit('Chat Created', chatCreated)
                     }
                 })
@@ -72,8 +72,8 @@ const handleSocketFunctions = (server) => {
         socket.on('Join Chat', async data => {
             socket.join(data.chatId);
             const chatContent = await chatController.retrieveChatHistory(data.chatId);
-            
-            if(chatContent !== false){
+
+            if (chatContent !== false) {
                 socket.emit('Retrieve Chat', chatContent);
             }
         })
@@ -83,7 +83,7 @@ const handleSocketFunctions = (server) => {
             try {
                 const time = Date.now();
                 const handleMessage = await chatController.handleNewMessage(data, time);
-                if(handleMessage){
+                if (handleMessage) {
                     io.to(data.chatId).emit('Message Received', {
                         from: data.from,
                         user: data.to,
@@ -93,7 +93,7 @@ const handleSocketFunctions = (server) => {
                 }
             } catch (error) {
                 console.error(error);
-            }          
+            }
         })
 
         socket.on('disconnect', () => {
