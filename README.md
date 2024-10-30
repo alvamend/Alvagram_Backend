@@ -14,4 +14,3 @@ Backend is developed using NodeJs/Express
 Frontend is developed using ReactJs
 
 App is responsive, some changes had to be done when deploying it in the actual server.
-URL to the app: https://alvagram.net or https://www.alvagram.net
