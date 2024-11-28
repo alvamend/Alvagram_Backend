@@ -12,5 +12,3 @@ Alvagram is a Web App inspired directly by Instagram, includes different actions
 
 Backend is developed using NodeJs/Express
 Frontend is developed using ReactJs
-
-App is responsive, some changes had to be done when deploying it in the actual server.
